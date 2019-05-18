@@ -18,16 +18,21 @@ class Rocket:
             self.vision_pos = []
             for i in range(1, 6):
                 t = math.pi / 6.0
+                y = self.cirkel_radius + self.y
                 x = math.cos(round(i) * t) * self.cirkel_radius + self.x
-                y = math.sin(round(i) * t) * self.cirkel_radius + self.y
+                #y = math.sin(round(i) * t) * self.cirkel_radius + self.y
                 self.vision_pos.append((x, y))
-            self.y += 1
+            self.y += 10
 
             percept = self.perceptron.return_value(inputs)
+            '''
             if percept == 1:
                 self.x += 1
             elif percept == -1:
                 self.x -= 1
+            '''
+            if not(-1 < percept*10 < 1):
+                self.x += percept*10
         
 
     def get_vision_positions(self):
