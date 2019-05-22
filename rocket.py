@@ -7,7 +7,7 @@ class Rocket:
         self.x = x
         self.y = y
         self.perceptron = Perceptron(5)
-        self.cirkel_radius = 100
+        self.cirkel_radius = 50
         self.alive = True
         self.score = 0
 

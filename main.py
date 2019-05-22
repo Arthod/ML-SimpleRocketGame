@@ -12,10 +12,12 @@ class Main:
         #Walls
         self.walls = []
         hole_width = 100
-        hole_height = 20
-        for i in range(20):
-            hole_pos = random.randint(0, 400)
-            self.walls.append((hole_pos - hole_width/2, i*hole_height*1.5 + 100, hole_width, hole_height))
+        hole_height = 40
+        hole_pos = 200
+        for i in range(10):
+            hole_pos += random.randint(-50, 50)
+            self.walls.append((0, i*hole_height+100, hole_pos-hole_width/2.0, hole_height))
+            self.walls.append((hole_pos+hole_width/2.0, i*hole_height+100, 400-(hole_pos+hole_width/2.0), hole_height))
 
         #Pygame
         pg.init()
@@ -78,9 +80,11 @@ class Main:
                 for i in range(len(self.rocket)):
                     if self.rocket[i].score > 600:
                         self.walls = []
-                        for i in range(20):
-                            hole_pos = random.randint(0, 400)
-                            self.walls.append((hole_pos - hole_width/2, i*hole_height*1.5 + 100, hole_width, hole_height))
+                        hole_pos = 200
+                        for i in range(10):
+                            hole_pos += random.randint(-50, 50)
+                            self.walls.append((0, i*hole_height+100, hole_pos-hole_width/2.0, hole_height))
+                            self.walls.append((hole_pos+hole_width/2.0, i*hole_height+100, 400-(hole_pos+hole_width/2.0), hole_height))
 
             pg.display.flip()
             clock.tick(60)

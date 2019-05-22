@@ -10,7 +10,7 @@ class Perceptron:
         sum = 0
         for i in range(len(self.weights)):
             sum += self.weights[i] * input[i]
-        return sum
+        return self.zeta(sum)
 
     def zeta(self, n):
         if n > 0:
