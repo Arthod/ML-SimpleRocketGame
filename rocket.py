@@ -3,13 +3,14 @@ from perceptron import Perceptron
 
 
 class Rocket:
-    def __init__(self, x, y):
+    def __init__(self, x, y, generation):
         self.x = x
         self.y = y
         self.perceptron = Perceptron(5)
         self.vision = 50
         self.alive = True
         self.score = 0
+        self.generation = generation
 
         self.loop([0, 0, 0, 0, 0, 0])
 

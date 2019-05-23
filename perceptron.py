@@ -4,7 +4,7 @@ class Perceptron:
     def __init__(self, inputs_amount):
         self.weights = []
         for i in range(inputs_amount):
-            self.weights.append(random.randint(0, 10)-5)
+            self.weights.append(random.randint(-5, 5))
 
     def return_value(self, input):
         sum = 0

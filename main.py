@@ -5,11 +5,21 @@ import random
 
 class Main:
     def __init__(self):
+        #Score:
+        self.global_score = 0
+        self.alive = 1
+        self.generation_number = 0
+        self.map_number = 0
+
+        #Rocket
         self.rocket = []
-        for i in range(100):
-            self.rocket.append(Rocket(200, 0))
+        for i in range(1000):
+            self.rocket.append(Rocket(200, 0, self.generation_number))
 
         #Walls
+        self.hole_width = 50
+        self.hole_height = 40
+        self.hole_pos = 200
         self.generate_walls()
 
         #Pygame
@@ -26,28 +36,54 @@ class Main:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     done = True
+            self.global_score += 1
 
             for i in range(len(self.rocket)):
                 collision = []
                 if self.rocket[i].alive:
                     for j in range(len(self.rocket[i].get_vision_positions())):
                         collision.append(0)
-                        for k in range(len(self.walls)):
-                            if self.check_vision_collision((self.rocket[i].x, self.rocket[i].y), self.rocket[i].get_vision_positions()[j], self.walls[k]):
-                                collision[j] = 1
+                        y = self.rocket[i].get_vision_positions()[j][1]
+                        seeing = (round(y/self.hole_height, None)-2)*2 - 2
+                        for k in range(seeing, seeing + 2):
+                            if seeing < len(self.walls):
+                                if self.check_vision_collision((self.rocket[i].x, self.rocket[i].y), self.rocket[i].get_vision_positions()[j], self.walls[k]):
+                                    collision[j] = 1
                     
-                    for j in range(len(self.walls)):
-                        if self.check_collision((self.rocket[i].x, self.rocket[i].y), self.walls[j]):
-                            self.rocket[i].alive = False
-                            self.rocket[i].score = self.rocket[i].y
+                    y = self.rocket[i].y
+                    seeing = (round(y/self.hole_height, None)-2)*2 - 2
+                    for j in range(seeing, seeing + 2):
+                        if seeing < len(self.walls):
+                            if self.check_collision((self.rocket[i].x, self.rocket[i].y), self.walls[j]):
+                                self.rocket[i].alive = False
+                                self.rocket[i].score = self.global_score
 
                     self.rocket[i].loop(collision)
 
-            alive = 0
+            #If above 600 score
+            highest = 0
+            for i in range(len(self.rocket)):
+                if self.rocket[i].y > highest:
+                    highest = self.rocket[i].y
+            if highest >= 600:
+                for i in range(len(self.rocket)):
+                    if self.rocket[i].alive == 1:
+                        self.rocket[i].y = 0
+                        self.rocket[i].x = 200
+                self.generate_walls()
+                self.map_number += 1
+                
+
+
+            #If all dead
+            self.alive = 0
             for i in range(len(self.rocket)):
                 if self.rocket[i].alive == 1:
-                    alive += 1
-            if alive == 0:  #All dead
+                    self.alive += 1
+            if self.alive == 0:  #All dead
+                self.global_score = 0
+                self.generation_number += 1
+                self.map_number = 0
                 #Bubble sort ranking
                 for i in range(len(self.rocket)):
                     for j in range(len(self.rocket)):
@@ -68,7 +104,7 @@ class Main:
 
                 #Children
                 for i in range(pop_amount):
-                    self.rocket.append(Rocket(200, 0))
+                    self.rocket.append(Rocket(200, 0, self.generation_number))
                     self.rocket[i + pop_amount].perceptron.weights = self.produce_child(self.rocket[0].perceptron.weights, self.rocket[i].perceptron.weights)
                     self.rocket[i + pop_amount].vision = (self.rocket[0].vision + self.rocket[i].vision)/2 + random.uniform(-10, 10)
                 
@@ -81,8 +117,6 @@ class Main:
 
     def generate_walls(self):
         self.walls = []
-        self.hole_width = 50
-        self.hole_height = 40
         self.hole_pos = 200
         for i in range(int((600-100)/self.hole_height)):
             self.hole_pos += random.randint(int(-self.hole_width/2.0), int(self.hole_width/2.0))
@@ -100,7 +134,7 @@ class Main:
         r_y = pos[1]
         if r_x > rectangle[0] and r_x < rectangle[2] + rectangle[0] and r_y > rectangle[1] and r_y < rectangle[3] + rectangle[1]:
             return True
-        elif r_y > 600:
+        elif r_x < 0 or r_x > 400:
             return True
         else:
             return False
@@ -135,10 +169,11 @@ class Main:
         rect(0, 0, 1600, 600, (255, 255, 255))
 
         for j in range(len(self.rocket)):
-            rect(self.rocket[j].x, self.rocket[j].y, 10, 10, (0, 0, 0))
-            for i in range(len(self.rocket[j].get_vision_positions())):
-                line(self.rocket[j].x, self.rocket[j].y, self.rocket[j].get_vision_positions()[i][0], self.rocket[j].get_vision_positions()[i][1])
-                rect(self.rocket[j].get_vision_positions()[i][0], self.rocket[j].get_vision_positions()[i][1], 2, 2, (0, 0, 255))
+            if self.rocket[j].alive == 1:
+                rect(self.rocket[j].x, self.rocket[j].y, 10, 10, (0, 0, 0))
+                for i in range(len(self.rocket[j].get_vision_positions())):
+                    line(self.rocket[j].x, self.rocket[j].y, self.rocket[j].get_vision_positions()[i][0], self.rocket[j].get_vision_positions()[i][1])
+                    rect(self.rocket[j].get_vision_positions()[i][0], self.rocket[j].get_vision_positions()[i][1], 2, 2, (0, 0, 255))
 
         #Walls
         for i in range(len(self.walls)):
@@ -146,11 +181,13 @@ class Main:
 
         #GUI
         rect(400, 0, 1200, 600, (190, 190, 190))
-        text(400+10, 10, self.font, "best score: " + str(self.rocket[0].score), (0, 0, 0))
-        text(400+10, 30, self.font, "top 10: ", (0, 0, 0))
+        text(400+10, 10, self.font, "global score: " + str(self.global_score), (0, 0, 0))
+        text(400+10, 30, self.font, str(self.alive) + " alive / " + str(len(self.rocket)) + " total", (0, 0, 0))
+        text(400+10, 50, self.font, "generation: " + str(self.generation_number))
+        text(10, 10, self.font, "map in generation: " + str(self.map_number))
         for i in range(len(self.rocket)):
             if self.rocket[i].alive:
-                text(400+20, 50+i*1*20, self.font, "score: " + str(self.rocket[i].score) + " | vision: " + str(round(self.rocket[i].vision, 2)) + " | weights: " + str(self.rocket[i].perceptron.weights))
+                text(400+20, 100+i*1*20, self.font, "g: " + str(self.rocket[i].generation) + " | score: " + str(self.rocket[i].score) + " | vision: " + str(round(self.rocket[i].vision, 2)) + " | weights: " + str(self.rocket[i].perceptron.weights))
             else:
-                text(400+20, 50+i*1*20, self.font, "score: " + str(self.rocket[i].score) + " | vision: " + str(round(self.rocket[i].vision, 2)) + " | weights: " + str(self.rocket[i].perceptron.weights), (255, 0, 0))
+                text(400+20, 100+i*1*20, self.font, "g: " + str(self.rocket[i].generation) + " | score: " + str(self.rocket[i].score) + " | vision: " + str(round(self.rocket[i].vision, 2)) + " | weights: " + str(self.rocket[i].perceptron.weights), (255, 0, 0))
 main = Main()
